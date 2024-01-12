@@ -203,6 +203,8 @@ class Video():
     def analyse_video(self, fingerpath, datapath):
         self.itag_box = {}
         for itag in self.itag_list:
+            if itag not in [247, 302]:
+                continue
             start, end = self.itag_indexrange[itag]['start'], self.itag_indexrange[itag]['end']
             try:
                 box = Box(itag, start, end, self.video_name, datapath)
@@ -215,19 +217,21 @@ class Video():
                     url = 'https://www.youtube.com//watch?v=' + self.video_name
                     f.write(url + ',' + str(itag) + ',' + box.itag_type + ',')
                     if box.itag_type == 'mp4':
-                        ref_list = box.reference_list
-                        f.write(str(len(ref_list)) + ',')
-                        ref_str = ''
-                        for ref in ref_list:
-                            ref_str = ref_str + '/' + str(ref)
-                        f.write(ref_str)
+                        seg_list = box.reference_list
                     elif box.itag_type == 'webm':
-                        tra_list = box.track_list
-                        f.write(str(len(tra_list)) + ',')
-                        tra_str = ''
-                        for tra in tra_list:
-                            tra_str = tra_str + '/' + str(tra)
-                        f.write(tra_str)
+                        seg_list = box.track_list
+                    f.write(str(self.itag_indexrange[itag]['start']) + ',' + str(self.itag_indexrange[itag]['end']) + ',')
+                    f.write(str(len(seg_list)) + ',')
+                    seg_str = ''
+                    for seg in seg_list:
+                        seg_str = seg_str + '/' + str(seg)
+                    f.write(seg_str + ',')
+
+                    segsum_list = [sum(seg_list[:i + 1]) + self.itag_indexrange[itag]['end'] for i in range(len(seg_list))]
+                    segsum_str = ''
+                    for segsum in segsum_list:
+                        segsum_str = segsum_str + '/' + str(segsum)
+                    f.write(segsum_str)
                     f.write('\n')
 
 
