@@ -3,6 +3,7 @@ import json
 import os
 import re
 import subprocess
+import time
 import requests
 from bs4 import BeautifulSoup
 
@@ -137,8 +138,8 @@ class Video():
         self.webm_itag = [278, 242, 243, 244, 247, 248, 271, 313, 302, 303, 308, 315, 272, 330, 331, 332, 333, 334, 335,
                           336, 337]
         self.get_itag_list()
-        # self.download_video(datapath)
-        # self.get_websource(datapath)
+        self.download_video(datapath)
+        self.get_websource(datapath)
         self.analyse_websource(datapath)
         self.analyse_video(fingerpath, datapath)
 
@@ -163,7 +164,17 @@ class Video():
             else:
                 raise ValueError('Itag Wrong')
             command = 'yt-dlp -f {} {} -o {}'.format(itag, self.url, videopath)
-            subprocess.run(command, shell=True, capture_output=True, text=True)
+            command = command.split(' ')
+            process = subprocess.Popen(command)
+            time.sleep(10)
+            process.kill()
+        time.sleep(30)
+        dirfile = os.listdir(datapath + '/download/' + self.video_name)
+        for file in dirfile:
+            if '.part' in file:
+                oldname = datapath + '/download/' + self.video_name + '/' + file
+                newname = datapath + '/download/' + self.video_name + '/' + file.replace('.part', '')
+                os.rename(oldname, newname)
 
     def get_websource(self, datapath):
         response = requests.get(self.url)
@@ -203,7 +214,7 @@ class Video():
     def analyse_video(self, fingerpath, datapath):
         self.itag_box = {}
         for itag in self.itag_list:
-            if itag not in [247, 302]:
+            if itag not in [136, 247, 302]:
                 continue
             start, end = self.itag_indexrange[itag]['start'], self.itag_indexrange[itag]['end']
             try:
@@ -220,33 +231,37 @@ class Video():
                         seg_list = box.reference_list
                     elif box.itag_type == 'webm':
                         seg_list = box.track_list
-                    f.write(str(self.itag_indexrange[itag]['start']) + ',' + str(self.itag_indexrange[itag]['end']) + ',')
+                    f.write(
+                        str(self.itag_indexrange[itag]['start']) + ',' + str(self.itag_indexrange[itag]['end']) + ',')
                     f.write(str(len(seg_list)) + ',')
                     seg_str = ''
                     for seg in seg_list:
                         seg_str = seg_str + '/' + str(seg)
-                    f.write(seg_str + ',')
+                    f.write(seg_str)
 
-                    segsum_list = [sum(seg_list[:i + 1]) + self.itag_indexrange[itag]['end'] for i in range(len(seg_list))]
-                    segsum_str = ''
-                    for segsum in segsum_list:
-                        segsum_str = segsum_str + '/' + str(segsum)
-                    f.write(segsum_str)
+                    # segsum_list = [sum(seg_list[:i + 1]) + self.itag_indexrange[itag]['end'] for i in range(len(seg_list))]
+                    # segsum_str = ''
+                    # for segsum in segsum_list:
+                    #     segsum_str = segsum_str + '/' + str(segsum)
+                    # f.write(',' + segsum_str)
+
                     f.write('\n')
 
 
 if __name__ == '__main__':
-    # download = Video('https://www.youtube.com//watch?v=9JvjLI_WJTo')
-
     datapath = 'E:/project/Attempt/data/record'
     fingerpath = 'E:/project/Attempt/data/fingerprint/segment.csv'
+
+    # download = Video('https://www.youtube.com//watch?v=gCs7pjBwu8Q', datapath, fingerpath)
 
     with open('E:/project/Attempt/data/temp/url_list.csv', 'r') as f:
         reader = csv.reader(f)
         txt = list(reader)
     url_list = [i[0] for i in txt]
 
-    video_list = []
-    for url in url_list:
-        video = Video(url, datapath, fingerpath)
-        video_list.append(video)
+    for i in range(150, len(url_list)):
+        try:
+            video = Video(url_list[i], datapath, fingerpath)
+        except:
+            with open('E:/project/Attempt/data/temp/error_log.csv', 'a') as f:
+                f.write(url_list[i] + '\n')
