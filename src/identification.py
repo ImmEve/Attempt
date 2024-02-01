@@ -1,5 +1,7 @@
 import csv
 from markov_alg import *
+import time
+import pickle
 
 
 class Database_Finger():
@@ -61,6 +63,7 @@ def getdata(datapath):
 
 if __name__ == '__main__':
     database, gateway = getdata('E:/project/Attempt/data/fingerprint')
+    result = []
 
     db2, db3, db4 = [], [], []
     for finger in database:
@@ -87,3 +90,8 @@ if __name__ == '__main__':
                 if gateway_url == markov_alg.pred_stream.video_url:
                     count = count + 1
         print(count / len(gateway))
+        result.append(count / len(gateway))
+
+    t = time.strftime('%m_%d_%H_%M', time.localtime(time.time()))
+    with open('E:/project/Attempt/data/result/result_' + t + '.data', 'wb') as f:
+        pickle.dump(result, f)

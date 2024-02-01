@@ -238,13 +238,6 @@ class Video():
                     for seg in seg_list:
                         seg_str = seg_str + '/' + str(seg)
                     f.write(seg_str)
-
-                    # segsum_list = [sum(seg_list[:i + 1]) + self.itag_indexrange[itag]['end'] for i in range(len(seg_list))]
-                    # segsum_str = ''
-                    # for segsum in segsum_list:
-                    #     segsum_str = segsum_str + '/' + str(segsum)
-                    # f.write(',' + segsum_str)
-
                     f.write('\n')
 
 
@@ -252,14 +245,14 @@ if __name__ == '__main__':
     datapath = 'E:/project/Attempt/data/record'
     fingerpath = 'E:/project/Attempt/data/fingerprint/segment.csv'
 
-    # download = Video('https://www.youtube.com//watch?v=gCs7pjBwu8Q', datapath, fingerpath)
+    # download = Video('https://www.youtube.com//watch?v=vJD6xX3Zb2o' , datapath, fingerpath)
 
     with open('E:/project/Attempt/data/temp/url_list.csv', 'r') as f:
         reader = csv.reader(f)
         txt = list(reader)
     url_list = [i[0] for i in txt]
 
-    for i in range(150, len(url_list)):
+    for i in range(0, len(url_list)):
         try:
             video = Video(url_list[i], datapath, fingerpath)
         except:
